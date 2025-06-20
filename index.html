@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Contour binaire animé</title>
+  <style>
+    html, body {
+      margin: 0; padding: 0; height: 100%;
+      background: black;
+      overflow: hidden;
+      font-family: monospace;
+      color: lime;
+    }
+    .border-container {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .line {
+      white-space: nowrap;
+      overflow: hidden;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .top, .bottom {
+      font-size: 18px;
+      height: 24px;
+    }
+    .left, .right {
+      position: fixed;
+      top: 0;
+      width: 24px;
+      height: 100vh;
+      font-size: 18px;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+    .left {
+      left: 0;
+    }
+    .right {
+      right: 0;
+    }
+    .content {
+      position: relative;
+      z-index: 1;
+      padding: 40px;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="border-container">
+    <div class="top line"></div>
+    <div class="left"></div>
+    <div class="right"></div>
+    <div class="bottom line"></div>
+  </div>
+
+  <div class="content">
+    <h1>Page avec contour binaire animé</h1>
+    <p>Regarde ce joli cadre de 0 et 1 qui tourne autour de la page.</p>
+  </div>
+
+  <script>
+    // Fonction pour générer une ligne aléatoire de 0 et 1 de la bonne longueur
+    function generateBinaryLine(length) {
+      let line = '';
+      for(let i=0; i<length; i++) {
+        line += Math.random() > 0.5 ? '0' : '1';
+      }
+      return line;
+    }
+
+    // Fonction pour animer une ligne en décalant les caractères
+    function animateLine(element, speed) {
+      let text = element.textContent;
+      setInterval(() => {
+        text = text.slice(1) + text[0];
+        element.textContent = text;
+      }, speed);
+    }
+
+    // Initialisation
+    const topLine = document.querySelector('.top');
+    const bottomLine = document.querySelector('.bottom');
+    const leftCol = document.querySelector('.left');
+    const rightCol = document.querySelector('.right');
+
+    // Génère les lignes du haut et du bas (largeur = largeur fenêtre / taille caractère)
+    const charWidth = 10; // approx monospace char width in px
+    const widthChars = Math.floor(window.innerWidth / charWidth);
+    const horizontalLine = generateBinaryLine(widthChars);
+
+    topLine.textContent = horizontalLine;
+    bottomLine.textContent = horizontalLine;
+
+    animateLine(topLine, 100);
+    animateLine(bottomLine, 100);
+
+    // Génère les colonnes gauche et droite (hauteur = hauteur fenêtre / taille char)
+    const charHeight = 24; // taille en px du line-height
+    const heightChars = Math.floor(window.innerHeight / charHeight);
+
+    // Colonne binaire verticale : on crée un tableau de 0 et 1
+    function generateBinaryColumn(length) {
+      let arr = [];
+      for(let i=0; i<length; i++) {
+        arr.push(Math.random() > 0.5 ? '0' : '1');
+      }
+      return arr;
+    }
+
+    let leftArr = generateBinaryColumn(heightChars);
+    let rightArr = generateBinaryColumn(heightChars);
+
+    // Fonction pour animer la colonne verticale
+    function animateColumn(arr, element, speed) {
+      setInterval(() => {
+        arr.push(arr.shift()); // rotation
+        element.textContent = arr.join('\n');
+      }, speed);
+    }
+
+    leftCol.textContent = leftArr.join('\n');
+    rightCol.textContent = rightArr.join('\n');
+
+    animateColumn(leftArr, leftCol, 150);
+    animateColumn(rightArr, rightCol, 150);
+
+    // Recalculer au resize (optionnel)
+    window.addEventListener('resize', () => {
+      const widthCharsNew = Math.floor(window.innerWidth / charWidth);
+      const horizontalLineNew = generateBinaryLine(widthCharsNew);
+      topLine.textContent = horizontalLineNew;
+      bottomLine.textContent = horizontalLineNew;
+
+      const heightCharsNew = Math.floor(window.innerHeight / charHeight);
+      leftArr = generateBinaryColumn(heightCharsNew);
+      rightArr = generateBinaryColumn(heightCharsNew);
+    });
+  </script>
+
+</body>
+</html>

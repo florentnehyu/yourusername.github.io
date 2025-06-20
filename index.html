@@ -2,8 +2,9 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Contour binaire animé</title>
+  <title>Binary Border + Fake Terminal</title>
   <style>
+    /* --- Styles pour contour binaire --- */
     html, body {
       margin: 0; padding: 0; height: 100%;
       background: black;
@@ -51,16 +52,54 @@
     .right {
       right: 0;
     }
-    .content {
+
+    /* --- Styles pour fake terminal --- */
+    #terminal {
       position: relative;
-      z-index: 1;
-      padding: 40px;
-      color: white;
+      z-index: 10; /* devant le binaire */
+      font-size: 24px;
+      white-space: nowrap;
+      user-select: none;
+      color: #00ff00;
+      font-family: 'Courier New', Courier, monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .cursor {
+      display: inline-block;
+      width: 10px;
+      background: #00ff00;
+      margin-left: 3px;
+      animation: blink 1s steps(2, start) infinite;
+      vertical-align: bottom;
+    }
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
+
+    /* Écran noir de fin */
+    #black-screen {
+      position: fixed;
+      top:0; left:0; width:100vw; height:100vh;
+      background: black;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1.5s ease-in-out;
+      z-index: 20; /* devant tout */
+    }
+    #black-screen.active {
+      opacity: 1;
+      pointer-events: all;
     }
   </style>
 </head>
 <body>
 
+  <!-- Contour binaire -->
   <div class="border-container">
     <div class="top line"></div>
     <div class="left"></div>
@@ -68,13 +107,14 @@
     <div class="bottom line"></div>
   </div>
 
-  <div class="content">
-    <h1>Page avec contour binaire animé</h1>
-    <p>Regarde ce joli cadre de 0 et 1 qui tourne autour de la page.</p>
-  </div>
+  <!-- Fake terminal au centre -->
+  <div id="terminal">Please enter the password<span class="cursor"></span></div>
+
+  <!-- Ecran noir -->
+  <div id="black-screen"></div>
 
   <script>
-    // Fonction pour générer une ligne aléatoire de 0 et 1 de la bonne longueur
+    /* --- Script contour binaire --- */
     function generateBinaryLine(length) {
       let line = '';
       for(let i=0; i<length; i++) {
@@ -83,7 +123,6 @@
       return line;
     }
 
-    // Fonction pour animer une ligne en décalant les caractères
     function animateLine(element, speed) {
       let text = element.textContent;
       setInterval(() => {
@@ -92,14 +131,12 @@
       }, speed);
     }
 
-    // Initialisation
     const topLine = document.querySelector('.top');
     const bottomLine = document.querySelector('.bottom');
     const leftCol = document.querySelector('.left');
     const rightCol = document.querySelector('.right');
 
-    // Génère les lignes du haut et du bas (largeur = largeur fenêtre / taille caractère)
-    const charWidth = 10; // approx monospace char width in px
+    const charWidth = 10;
     const widthChars = Math.floor(window.innerWidth / charWidth);
     const horizontalLine = generateBinaryLine(widthChars);
 
@@ -109,11 +146,9 @@
     animateLine(topLine, 100);
     animateLine(bottomLine, 100);
 
-    // Génère les colonnes gauche et droite (hauteur = hauteur fenêtre / taille char)
-    const charHeight = 24; // taille en px du line-height
+    const charHeight = 24;
     const heightChars = Math.floor(window.innerHeight / charHeight);
 
-    // Colonne binaire verticale : on crée un tableau de 0 et 1
     function generateBinaryColumn(length) {
       let arr = [];
       for(let i=0; i<length; i++) {
@@ -125,10 +160,9 @@
     let leftArr = generateBinaryColumn(heightChars);
     let rightArr = generateBinaryColumn(heightChars);
 
-    // Fonction pour animer la colonne verticale
     function animateColumn(arr, element, speed) {
       setInterval(() => {
-        arr.push(arr.shift()); // rotation
+        arr.push(arr.shift());
         element.textContent = arr.join('\n');
       }, speed);
     }
@@ -139,7 +173,6 @@
     animateColumn(leftArr, leftCol, 150);
     animateColumn(rightArr, rightCol, 150);
 
-    // Recalculer au resize (optionnel)
     window.addEventListener('resize', () => {
       const widthCharsNew = Math.floor(window.innerWidth / charWidth);
       const horizontalLineNew = generateBinaryLine(widthCharsNew);
@@ -150,7 +183,31 @@
       leftArr = generateBinaryColumn(heightCharsNew);
       rightArr = generateBinaryColumn(heightCharsNew);
     });
-  </script>
 
+    /* --- Script fake terminal --- */
+    const terminal = document.getElementById('terminal');
+    const cursor = terminal.querySelector('.cursor');
+    const blackScreen = document.getElementById('black-screen');
+
+    const password = "VHS_USER_1337";
+    let index = 0;
+    const delayBeforeTyping = 1500;
+
+    function typePassword() {
+      if(index < password.length) {
+        terminal.textContent += password[index];
+        terminal.appendChild(cursor);
+        index++;
+        setTimeout(typePassword, 120);
+      } else {
+        setTimeout(() => {
+          blackScreen.classList.add('active');
+          cursor.style.display = 'none';
+        }, 800);
+      }
+    }
+
+    setTimeout(typePassword, delayBeforeTyping);
+  </script>
 </body>
 </html>
